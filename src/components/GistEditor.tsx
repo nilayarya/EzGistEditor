@@ -4,6 +4,7 @@ import { GistData } from '../types';
 interface GistEditorProps {
   data: GistData;
   onContentChange: (description: string, filename: string, content: string) => void;
+  onConfirmPrint: () => void;
 }
 
 // Simple SVG path for a download icon (custom style)
@@ -22,7 +23,7 @@ const DownloadIcon = () => (
     </svg>
 );
 
-const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
+const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange, onConfirmPrint }) => {
   const [description, setDescription] = useState(data.description);
   const [filename, setFilename] = useState(data.files[0]?.filename || '');
   const [content, setContent] = useState(data.files[0]?.content || '');
@@ -64,10 +65,9 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
   };
 
   // Proceed with printing after confirmation
-  const handleConfirmPrint = () => {
-    setShowPrintConfirmPopup(false); // Hide the popup
-    console.log('Triggering browser print dialog...');
-    window.print(); // Trigger the browser's print functionality
+  const handleTriggerPrint = () => {
+    setShowPrintConfirmPopup(false); // Hide the popup first
+    onConfirmPrint(); // Call the function passed from App.tsx
   };
 
   // Optional: Remove this function if Cancel button is gone and click-outside handles closure
@@ -103,7 +103,7 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
                   (usually under "More settings"-&gt;"Options") for the cleanest PDF.
                 </p>
                 <div className="print-confirm-buttons">
-                  <button onClick={handleConfirmPrint} className="confirm-button">Continue to Print</button>
+                  <button onClick={handleTriggerPrint} className="confirm-button">Continue to Print</button>
                 </div>
               </div>
             )}

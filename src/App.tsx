@@ -18,6 +18,7 @@ const App: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [editorWidth, setEditorWidth] = useState(50);
   const splitViewRef = useRef<HTMLDivElement>(null);
+  const [isPreparingPrint, setIsPreparingPrint] = useState(false);
 
   const handleContentChange = (description: string, filename: string, content: string) => {
     setGistData({
@@ -74,26 +75,50 @@ const App: React.FC = () => {
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
+  const handleConfirmPrint = () => {
+    setIsPreparingPrint(true);
+    setTimeout(() => {
+      window.print();
+    }, 0);
+  };
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      console.log("After print event triggered");
+      setIsPreparingPrint(false);
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    return () => {
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
+
   return (
     <div className="app">
-      <div className="split-view" ref={splitViewRef}>
+      <div
+        className={`split-view ${isPreparingPrint ? 'preparing-print' : ''}`}
+        ref={splitViewRef}
+      >
         <div
-          className="editor-pane"
-          style={{ flexBasis: `${editorWidth}%` }}
+          className={`editor-pane ${isPreparingPrint ? 'preparing-print' : ''}`}
+          style={!isPreparingPrint ? { flexBasis: `${editorWidth}%` } : {}}
         >
           <GistEditor 
             data={gistData}
             onContentChange={handleContentChange}
+            onConfirmPrint={handleConfirmPrint}
           />
         </div>
         <div
-          className="divider"
+          className={`divider ${isPreparingPrint ? 'preparing-print' : ''}`}
           onMouseDown={handleMouseDown}
           title="Drag to resize"
         />
         <div
-          className="preview-pane"
-          style={{ flexBasis: `${100 - editorWidth}%` }}
+          className={`preview-pane ${isPreparingPrint ? 'preparing-print' : ''}`}
+          style={!isPreparingPrint ? { flexBasis: `${100 - editorWidth}%` } : {}}
         >
           <GistPreview data={gistData} />
         </div>

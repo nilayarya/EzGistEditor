@@ -668,10 +668,121 @@ button:hover {
 
 /* --- Print Specific Styles --- */
 @media print {
-  /* ... your existing print styles to hide editor etc. ... */
-
-  /* Ensure the bubble itself is not printed */
-  .print-confirm-bubble {
+  /* Hide elements NOT part of the preview */
+  .editor-pane,
+  .divider,
+  body > header,
+  body > footer,
+  .print-confirm-bubble /* Ensure bubble is hidden */
+  {
     display: none !important;
   }
+
+  /* Reset body/app styles for printing */
+  body, .app {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    background-color: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #000000 !important;
+  }
+
+  /* Make the split view and preview pane take up the whole print area */
+  .split-view {
+    display: block !important; /* Change from flex to block for printing */
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    border: none !important;
+  }
+
+  .preview-pane {
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important; /* Show all content, allow page breaks */
+    position: static !important;
+    border: none !important;
+    padding: 0 !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Style the preview content wrapper for printing */
+  .preview-content-wrapper {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 1cm !important; /* Add print margin */
+    box-shadow: none !important;
+    border: none !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* ... other print styles for content, links, code blocks ... */
+   /* Ensure preview content itself uses white background and black text */
+   .preview-pane .preview-content-wrapper *,
+   .preview-pane .gist-preview *
+    {
+     background-color: transparent !important;
+     color: #000000 !important;
+     box-shadow: none !important;
+     border-color: #dddddd !important;
+   }
+   .preview-pane a, .preview-pane a:visited {
+     color: #0000ee !important;
+     text-decoration: underline !important;
+   }
+   .preview-pane .file-content pre,
+   .preview-pane .file-content code {
+     background-color: #f6f8fa !important;
+     color: #000000 !important;
+     border: 1px solid #dddddd !important;
+     white-space: pre-wrap !important;
+     word-wrap: break-word !important;
+     page-break-inside: avoid !important;
+   }
+   .preview-pane .file-content pre code {
+       background-color: transparent !important;
+       border: none !important;
+   }
+
+
+  /* Page setup */
+  @page {
+    margin: 1cm;
+    @top-left { content: ""; }
+    @top-center { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-center { content: ""; }
+    @bottom-right { content: ""; }
+  }
+}
+
+/* Styles for Print Preparation State */
+.editor-pane.preparing-print,
+.divider.preparing-print {
+  display: none !important; /* Hide editor and divider */
+}
+
+.preview-pane.preparing-print {
+  width: 100% !important; /* Take full width */
+  height: 100% !important; /* Take full height */
+  flex-basis: auto !important; /* Override inline flex-basis */
+  flex-grow: 1 !important; /* Ensure it grows if needed */
+  min-width: 0 !important; /* Override min-width */
+  overflow: visible !important; /* Allow content to flow for printing */
+}
+
+/* Ensure the split view itself doesn't constrain the preview */
+.split-view.preparing-print {
+   /* Optional: Add styles if needed, e.g., override flex properties */
+   /* display: block !important; */ /* Could change display if flex causes issues */
 } 
