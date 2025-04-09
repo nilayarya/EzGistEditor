@@ -39,7 +39,7 @@ Contributions are welcome! Please follow these steps:
 
 2.  **Make Changes:** Write your code and add tests if applicable. Ensure code follows existing style.
 
-3.  **Commit Changes:** Use semantic commit messages [[2]](https://www.electronjs.org/docs/latest/development/pull-requests#commit-message-guidelines).
+3.  **Commit Changes:** Use semantic commit messages
     ```bash
     git add .
     git commit -m "feat: Add PDF generation button"
@@ -48,7 +48,7 @@ Contributions are welcome! Please follow these steps:
     # or
     git commit -m "docs: Update README setup instructions"
     ```
-    Common prefixes: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. Add `BREAKING CHANGE:` in the body/footer for breaking changes [[2]](https://www.electronjs.org/docs/latest/development/pull-requests#breaking-changes).
+    Common prefixes: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`. Add `BREAKING CHANGE:` in the body/footer for breaking changes.
 
 4.  **Rebase:** Before pushing, synchronize with the main repository:
     ```bash
