@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GistData } from '../types';
 
 interface GistEditorProps {
@@ -27,19 +27,52 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
   const [filename, setFilename] = useState(data.files[0]?.filename || '');
   const [content, setContent] = useState(data.files[0]?.content || '');
   const [gistUrl, setGistUrl] = useState('');
+  const [showPrintConfirmPopup, setShowPrintConfirmPopup] = useState(false); // State for popup visibility
+  const saveButtonContainerRef = useRef<HTMLDivElement>(null); // Ref for the container
 
   useEffect(() => {
     onContentChange(description, filename, content);
   }, [description, filename, content, onContentChange]);
+
+  // Click outside handler to close the popup
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (saveButtonContainerRef.current && !saveButtonContainerRef.current.contains(event.target as Node)) {
+        setShowPrintConfirmPopup(false);
+      }
+    };
+
+    if (showPrintConfirmPopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPrintConfirmPopup]); // Re-run when popup visibility changes
 
   const handleLoadGist = () => {
     // TODO: Implement Gist loading logic
     console.log('Load Gist clicked', gistUrl);
   };
 
-  const handleSavePdf = () => {
-    // TODO: Implement PDF saving logic
-    console.log('Save to PDF clicked');
+  // Toggle the confirmation popup
+  const handleSavePdfClick = () => {
+    setShowPrintConfirmPopup(prev => !prev); // Toggle visibility
+  };
+
+  // Proceed with printing after confirmation
+  const handleConfirmPrint = () => {
+    setShowPrintConfirmPopup(false); // Hide the popup
+    console.log('Triggering browser print dialog...');
+    window.print(); // Trigger the browser's print functionality
+  };
+
+  // Optional: Remove this function if Cancel button is gone and click-outside handles closure
+  const handleCancelPrint = () => {
+     setShowPrintConfirmPopup(false);
   };
 
   return (
@@ -54,10 +87,28 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
             onChange={(e) => setGistUrl(e.target.value)}
           />
           <button className="load-button" onClick={handleLoadGist}>Load Gist</button>
-          <button className="save-pdf-button" onClick={handleSavePdf}>
-             <DownloadIcon />
-             Save to PDF
-          </button>
+
+          {/* Wrap Save Button and Popup in a relative container */}
+          <div className="save-pdf-container" ref={saveButtonContainerRef}>
+            <button className="save-pdf-button" onClick={handleSavePdfClick}>
+               <DownloadIcon />
+               Save to PDF
+            </button>
+
+            {/* Confirmation Popup Bubble */}
+            {showPrintConfirmPopup && (
+              <div className="print-confirm-bubble">
+                <p>
+                  Tip: When the print dialog appears, uncheck "Headers and footers"
+                  (usually under "More settings"-&gt;"Options") for the cleanest PDF.
+                </p>
+                <div className="print-confirm-buttons">
+                  <button onClick={handleConfirmPrint} className="confirm-button">Continue to Print</button>
+                </div>
+              </div>
+            )}
+          </div> {/* End save-pdf-container */}
+
         </div>
       </div>
       

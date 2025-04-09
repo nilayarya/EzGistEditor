@@ -86,13 +86,13 @@ body {
 }
 
 .gist-editor-header {
-  padding: 16px; /* Restore padding */
-  border-bottom: 1px solid #30363d; /* Restore border */
-  background-color: #161b22; /* Restore background */
-  height: 57px; /* Restore height */
-  display: flex; /* Restore flex for alignment */
-  align-items: center; /* Restore alignment */
-  flex-shrink: 0; /* Prevent header from shrinking */
+  padding: 16px;
+  border-bottom: 1px solid #30363d;
+  background-color: #161b22;
+  height: 57px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 /* If you still have a description input, restore its styles */
@@ -252,77 +252,93 @@ button:hover {
 /* Add these new styles */
 .gist-url-container {
   display: flex;
-  gap: 8px;
   align-items: center;
-  width: 100%;
+  gap: 10px; /* Add space between elements */
+  width: 100%; /* Allow it to take available space */
 }
 
 .gist-url-input {
-  /* Explicit flex properties */
-  flex-grow: 1; /* Default grow factor */
-  flex-shrink: 1; /* Allow shrinking if needed, though button won't shrink */
-  flex-basis: 0%; /* Start from 0 width and grow */
+  flex-grow: 1; /* Allow input to take up remaining space */
+  /* Existing input styles */
   padding: 5px 12px;
   background-color: #010409;
   border: 1px solid #30363d;
   border-radius: 6px;
   color: #c9d1d9;
   font-size: 14px;
-  height: 32px; /* Add explicit height */
-  line-height: normal; /* Ensure consistent line height */
-  /* Animate the flex-grow property */
-  transition: flex-grow 0.3s ease-in-out;
-  min-width: 100px; /* Keep minimum width */
-  overflow: hidden; /* Prevent content overflow issues */
+  height: 32px;
+  line-height: normal;
 }
 
+/* Ensure buttons don't shrink and apply GREEN styles to ALL buttons in this container */
+.gist-url-container button {
+  flex-shrink: 0;
+  padding: 5px 16px; /* Standard padding */
+  border-radius: 6px;
+  /* Apply green styles */
+  border: 1px solid #2ea043; /* Green border */
+  background-color: #238636; /* Green background */
+  color: #ffffff; /* White text */
+  cursor: pointer;
+  font-size: 14px;
+  height: 32px; /* Match input height */
+  line-height: normal; /* Explicit line-height */
+  white-space: nowrap; /* Prevent text wrapping */
+  display: flex; /* Align icon and text if present */
+  align-items: center; /* Center vertically */
+  gap: 6px; /* Space between icon and text */
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Add transitions */
+}
+/* Hover state for the green buttons */
+.gist-url-container button:hover {
+  background-color: #2ea043; /* Darker green on hover */
+  border-color: #2ea043;
+}
+/* Style for icons inside these buttons */
+.gist-url-container button .button-icon path {
+    fill: #ffffff; /* Make icon white */
+}
+
+/* Remove specific styles for Load Gist button (now inherits green) */
+/*
 .load-button {
-  /* Explicitly prevent button from growing or shrinking */
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto; /* Size based on content + padding */
+  /* Inherits flex-shrink: 0 and base styles from '.gist-url-container button' */
+  /* No specific background/border needed unless overriding the default */
+/* } */
 
-  background-color: #238636; /* Green */
-  border-color: #238636;
-  white-space: nowrap;
-  padding: 5px 16px;
-  font-size: 14px;
-  line-height: normal; /* Explicit line-height */
-  height: 32px; /* Match input height */
-  border-radius: 6px;
-  color: #c9d1d9;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  display: flex; /* Align icon and text */
-  align-items: center; /* Center vertically */
-  gap: 6px; /* Space between icon and text */
-}
-
-/* New styles for Save PDF button */
+/* Remove specific styles for Save PDF button (now inherits green) */
+/*
 .save-pdf-button {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-
-  background-color: #238636; /* Use green color */
-  border: 1px solid #238636; /* Use green border */
-  color: #c9d1d9; /* Default text color */
-  white-space: nowrap;
-  padding: 5px 16px;
-  font-size: 14px;
-  line-height: normal; /* Explicit line-height */
-  height: 32px; /* Match input height */
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-  display: flex; /* Align icon and text */
-  align-items: center; /* Center vertically */
-  gap: 6px; /* Space between icon and text */
-}
-
+  /* Inherits flex-shrink: 0 and base styles */
+  /* background-color: #238636; */ /* Green background */
+  /* border-color: #2ea043; */ /* Green border */
+  /* color: #ffffff; */ /* White text */
+/* } */
+/*
 .save-pdf-button:hover {
-  background-color: #2ea043; /* Use lighter green on hover */
-  border-color: #2ea043; /* Use lighter green border on hover */
+  background-color: #2ea043; /* Darker green on hover */
+  /* border-color: #2ea043; */
+/* } */
+/* Remove specific icon style (now handled by general rule) */
+/*
+.save-pdf-button .button-icon path {
+    fill: #ffffff; /* Make icon white */
+/* } */
+
+
+/* Ensure the save container doesn't shrink */
+.save-pdf-container {
+  position: relative;
+  display: inline-block; /* Keep as inline-block */
+  flex-shrink: 0; /* Prevent shrinking */
+  line-height: 0; /* Fix potential alignment issues caused by inline-block */
+}
+/* The button inside the container needs display flex if it has an icon */
+/* This rule might become redundant if the general rule covers it, but keep for safety */
+.save-pdf-container .save-pdf-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* Generic style for icons inside buttons */
@@ -347,17 +363,6 @@ button:hover {
 /* Increase the input's grow factor significantly on hover */
 .gist-url-container:hover .gist-url-input {
   flex-grow: 3; /* Make it much more eager to take space */
-}
-
-.load-button:hover {
-  background-color: #2ea043; /* Lighter green on hover */
-}
-
-/* Keep the input expanded when focused */
-.gist-url-input:focus {
-  outline: none;
-  border-color: #388bfd;
-  flex-grow: 3; /* Match hover state */
 }
 
 .filename-container {
@@ -555,4 +560,118 @@ button:hover {
   padding: 0 20px; /* Add horizontal padding for smaller screens */
   width: 100%; /* Ensure it takes full width up to max-width */
 }
-*/ 
+*/
+
+/* Container for the save button and its popup */
+.save-pdf-container {
+  position: relative; /* Establishes positioning context for the bubble */
+  display: inline-block; /* Or 'block' if the button takes full width */
+}
+
+/* Remove the overlay style */
+/*
+.print-confirm-overlay { ... }
+*/
+
+/* --- Print Confirmation Bubble Styles --- */
+
+.print-confirm-bubble {
+  position: absolute;
+  background-color: #1f242c; /* Slightly lighter than popup for contrast */
+  color: #c9d1d9;
+  padding: 15px 20px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  width: 300px; /* Set a reasonable width */
+  z-index: 1000; /* Ensure it's on top */
+  text-align: left; /* Align text left for bubble */
+
+  /* Positioning: Below and aligned to the right edge of the container */
+  top: calc(100% + 10px); /* 100% of container height + 10px gap */
+  right: 0; /* Align right edge of bubble with right edge of container */
+}
+
+/* Add the triangle/arrow pointing up */
+.print-confirm-bubble::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #1f242c; /* Match bubble background */
+
+  /* Positioning the triangle */
+  top: -8px; /* Position it just above the bubble's top border */
+  right: 15px; /* Position it near the right edge */
+}
+.print-confirm-bubble::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 9px solid transparent; /* Slightly larger */
+    border-right: 9px solid transparent; /* Slightly larger */
+    border-bottom: 9px solid #30363d; /* Match bubble border color */
+    top: -10px; /* Position slightly behind the main triangle */
+    right: 14px; /* Align with the main triangle */
+    z-index: -1; /* Place behind the main triangle */
+}
+
+
+/* Remove heading styles if not needed */
+/* .print-confirm-bubble h3 { ... } */
+
+.print-confirm-bubble p {
+  margin-top: 0;
+  margin-bottom: 15px; /* Space before buttons */
+  line-height: 1.4;
+  font-size: 13px;
+  color: #adb5bd; /* Slightly lighter gray */
+}
+
+.print-confirm-buttons {
+  display: flex;
+  justify-content: flex-end; /* Keep button aligned right */
+  gap: 8px; /* Gap is less relevant now but harmless */
+}
+
+.print-confirm-buttons button {
+  padding: 5px 12px; /* Smaller padding for bubble buttons */
+  font-size: 13px;
+}
+
+/* Remove styles for the Cancel button */
+/*
+.print-confirm-buttons .cancel-button {
+  background-color: #21262d;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
+.print-confirm-buttons .cancel-button:hover {
+  background-color: #30363d;
+  border-color: #8b949e;
+}
+*/
+
+/* Keep styles for the Confirm button */
+.print-confirm-buttons .confirm-button {
+  background-color: #238636;
+  border-color: #2ea043;
+  color: #ffffff;
+}
+.print-confirm-buttons .confirm-button:hover {
+  background-color: #2ea043;
+}
+
+
+/* --- Print Specific Styles --- */
+@media print {
+  /* ... your existing print styles to hide editor etc. ... */
+
+  /* Ensure the bubble itself is not printed */
+  .print-confirm-bubble {
+    display: none !important;
+  }
+} 
