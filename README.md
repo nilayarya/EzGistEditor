@@ -64,6 +64,3 @@ Contributions are welcome! Please follow these steps:
 
 6.  **Open Pull Request:** Go to the original repository (`nilayarya/gist2pdf`) on GitHub and open a pull request from your fork's branch (`my-feature-branch`) to the original `main` branch. Fill out the pull request template.
 
----
-*Reference [1]: nilayarya/gist2pdf GitHub Repository. https://github.com/nilayarya/gist2pdf.git*
-*Reference [2]: Electron Contributing Guide - Pull Requests. https://www.electronjs.org/docs/latest/development/pull-requests*
