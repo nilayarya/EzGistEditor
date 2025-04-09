@@ -1,0 +1,481 @@
+/* Reset any potential white backgrounds */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0d1117; /* Ensure body background is dark */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; /* Set base font */
+  color: #c9d1d9; /* Set base text color */
+}
+
+.app {
+  /* Restore original styles */
+  min-height: 100vh;
+  background-color: #0d1117;
+  /* Remove width/padding */
+  /* width: 100%; */
+  /* padding: 20px 0; */
+}
+
+.split-view {
+  display: flex;
+  min-height: 100vh; /* Restore min-height */
+  /* Remove fixed height, border, border-radius */
+  /* height: calc(100vh - 40px); */
+  align-items: stretch;
+  overflow: hidden;
+  /* border: 1px solid #30363d; */
+  /* border-radius: 6px; */
+}
+
+.editor-pane {
+  /* flex: 1; Remove fixed flex */
+  flex-grow: 0; /* Don't grow beyond basis */
+  flex-shrink: 0; /* Don't shrink beyond basis */
+  /* flex-basis is set inline */
+  min-width: ${MIN_PANE_WIDTH}px; /* Use variable or fixed value */
+  border-right: none; /* Divider will handle the visual separation */
+  overflow-x: hidden;
+  /* Add vertical scroll if editor content overflows */
+  overflow-y: auto;
+  position: relative; /* Needed if editor has absolutely positioned elements */
+}
+
+.preview-pane {
+  /* flex: 1; Remove fixed flex */
+  flex-grow: 0;
+  flex-shrink: 0;
+  /* flex-basis is set inline */
+  min-width: ${MIN_PANE_WIDTH}px;
+  background-color: #0d1117;
+  /* Remove padding from pane, it will be handled by wrapper/content */
+  padding: 0; /* Revert padding back to 0 */
+  border-left: none;
+  overflow: auto; /* Keep scroll on the pane */
+  position: relative;
+  /* Add padding-top here to push content below editor header */
+  /* padding-top: 57px; */ /* Keep this commented or remove if not needed */
+}
+
+/* New wrapper for max-width and centering */
+.preview-content-wrapper {
+  max-width: 978px; /* Set your desired max-width */
+  margin: 0 auto; /* Center the wrapper horizontally */
+  width: 100%; /* Use full width up to max-width */
+  /* Add padding inside the wrapper */
+  padding: 0 24px 24px 24px; /* Example padding (top, right, bottom, left) */
+
+}
+
+.gist-editor {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.gist-editor-header {
+  padding: 16px;
+  border-bottom: 1px solid #30363d;
+  background-color: #161b22;
+  height: 57px;
+  display: flex;
+  align-items: center;
+}
+
+.gist-description-input {
+  width: 100%;
+  padding: 5px 12px;
+  background-color: #010409;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+  font-size: 14px;
+}
+
+.gist-editor-toolbar {
+  padding: 8px 16px;
+  background-color: #161b22;
+  border-bottom: 1px solid #30363d;
+  height: 41px;
+  display: flex;
+  align-items: center;
+}
+
+.filename-input {
+  width: 100%;
+  padding: 5px 12px;
+  background-color: #010409;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+  font-size: 14px;
+}
+
+.content-textarea {
+  width: 100%;
+  /* Revert height calculation */
+  height: calc(100vh - 98px); /* Or original calc(100vh - 120px) if footer was present */
+  background-color: #0d1117;
+  border: none;
+  color: #c9d1d9;
+  padding: 16px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: none;
+  /* Remove display: block if not needed */
+  /* display: block; */
+}
+
+.gist-editor-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  border-top: 1px solid #30363d;
+  background-color: #0d1117;
+}
+
+button {
+  padding: 5px 16px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  background-color: #21262d;
+  color: #c9d1d9;
+  cursor: pointer;
+}
+
+.update-button {
+  background-color: #238636;
+  border-color: #238636;
+}
+
+.gist-preview {
+  /* Remove padding, handled by wrapper */
+  /* padding: 0 16px; */
+  /* Remove height, let content determine it */
+  /* height: 100%; */
+  /* Restore original padding if any */
+   padding: 0 16px; /* Restore horizontal padding */
+}
+
+.gist-preview-header h1 {
+  font-size: 1.5em;
+  margin-bottom: 1em;
+  color: #c9d1d9;
+}
+
+.gist-file {
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.file-header {
+  background-color: #161b22;
+  padding: 8px 16px;
+  border-bottom: 1px solid #30363d;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Add gap between icon and filename */
+}
+
+/* Style for the SVG icon */
+.file-icon {
+  fill: #8b949e; /* Icon color (GitHub's gray) */
+  vertical-align: text-bottom; /* Align icon nicely with text */
+}
+
+.filename {
+  color: #58a6ff; /* GitHub's link blue color */
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 14px; /* Ensure consistent font size */
+  font-weight: 600; /* Make filename slightly bolder */
+}
+
+.file-content {
+  /* Adjust padding: Increase left padding */
+  padding: 32px 32px 32px 32px; /* Example: Top 16, Right 16, Bottom 16, Left 32 */
+  background-color: #0d1117;
+  color: #c9d1d9;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Focus styles */
+.gist-description-input:focus,
+.filename-input:focus,
+.content-textarea:focus {
+  outline: none;
+  border-color: #388bfd;
+}
+
+/* Button hover states */
+button:hover {
+  background-color: #30363d;
+}
+
+.update-button:hover {
+  background-color: #2ea043;
+}
+
+/* Add these new styles */
+.gist-url-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.gist-url-input {
+  /* Explicit flex properties */
+  flex-grow: 1; /* Default grow factor */
+  flex-shrink: 1; /* Allow shrinking if needed, though button won't shrink */
+  flex-basis: 0%; /* Start from 0 width and grow */
+  padding: 5px 12px;
+  background-color: #010409;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #c9d1d9;
+  font-size: 14px;
+  /* Animate the flex-grow property */
+  transition: flex-grow 0.3s ease-in-out;
+  min-width: 100px; /* Keep minimum width */
+  overflow: hidden; /* Prevent content overflow issues */
+}
+
+.load-button {
+  /* Explicitly prevent button from growing or shrinking */
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto; /* Size based on content + padding */
+
+  background-color: #238636;
+  border-color: #238636;
+  white-space: nowrap;
+  padding: 5px 16px;
+  font-size: 14px;
+  line-height: normal;
+  border-radius: 6px;
+  color: #c9d1d9;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Increase the input's grow factor significantly on hover */
+.gist-url-container:hover .gist-url-input {
+  flex-grow: 3; /* Make it much more eager to take space */
+}
+
+.load-button:hover {
+  background-color: #2ea043;
+}
+
+/* Keep the input expanded when focused */
+.gist-url-input:focus {
+  outline: none;
+  border-color: #388bfd;
+  flex-grow: 3; /* Match hover state */
+}
+
+.filename-container {
+  width: 100%;
+}
+
+/* ADD these styles for Markdown rendering */
+.file-content > *:first-child {
+  margin-top: 0 !important; /* Remove top margin from the very first element */
+}
+
+.file-content h1,
+.file-content h2,
+.file-content h3,
+.file-content h4,
+.file-content h5,
+.file-content h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #c9d1d9;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #30363d; /* Add bottom border like GitHub */
+}
+
+.file-content h1 { font-size: 2em; }
+.file-content h2 { font-size: 1.5em; }
+.file-content h3 { font-size: 1.25em; }
+.file-content h4 { font-size: 1em; }
+.file-content h5 { font-size: .875em; }
+.file-content h6 { font-size: .85em; color: #8b949e; } /* Dim h6 */
+
+/* Remove border from final headings if needed */
+.file-content h1:last-child,
+.file-content h2:last-child,
+.file-content h3:last-child,
+.file-content h4:last-child,
+.file-content h5:last-child,
+.file-content h6:last-child {
+  border-bottom: 0;
+}
+
+.file-content p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.file-content a {
+  color: #58a6ff;
+  text-decoration: none;
+}
+
+.file-content a:hover {
+  text-decoration: underline;
+}
+
+.file-content ul,
+.file-content ol {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-left: 2em;
+}
+
+.file-content li {
+  margin-bottom: 0.25em;
+}
+.file-content li > p { /* Paragraphs inside list items */
+   margin-bottom: 0.25em;
+}
+
+/* Inline code */
+.file-content code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(110, 118, 129, 0.4); /* GitHub's inline code background */
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* Code blocks (fenced) */
+.file-content pre {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #161b22; /* Code block background */
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* Reset code style within pre */
+.file-content pre code {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: transparent;
+  border: 0;
+  font-size: 100%; /* Inherit pre's font size */
+  color: inherit; /* Inherit pre's color */
+}
+
+.file-content blockquote {
+  margin: 0 0 16px;
+  padding: 0 1em;
+  color: #8b949e; /* Dim blockquote text */
+  border-left: 0.25em solid #30363d; /* Blockquote border */
+}
+.file-content blockquote > :first-child { margin-top: 0; }
+.file-content blockquote > :last-child { margin-bottom: 0; }
+
+.file-content hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: #30363d; /* Horizontal rule color */
+  border: 0;
+}
+
+.file-content table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  margin-top: 0;
+  margin-bottom: 16px;
+  border-spacing: 0;
+  border-collapse: collapse;
+  border: 1px solid #30363d;
+}
+
+.file-content table th,
+.file-content table td {
+  padding: 6px 13px;
+  border: 1px solid #30363d;
+}
+
+.file-content table th {
+    font-weight: 600; /* Bold table headers */
+    background-color: #161b22; /* Header background */
+}
+
+.file-content table tr {
+  background-color: #0d1117; /* Default row background */
+  border-top: 1px solid #30363d;
+}
+
+.file-content table tr:nth-child(2n) {
+  background-color: #161b22; /* Zebra striping */
+}
+
+/* Task Lists (from GFM) */
+.file-content .task-list-item {
+  list-style-type: none; /* Remove default bullet */
+}
+.file-content .task-list-item input[type="checkbox"] {
+  margin: 0 0.2em 0.25em -1.6em; /* Position checkbox */
+  vertical-align: middle;
+}
+
+/* Styles for the draggable divider */
+.divider {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 5px; /* Width of the draggable area */
+  background-color: #30363d; /* Color of the divider */
+  cursor: col-resize; /* Cursor indicating horizontal resize */
+  position: relative;
+  z-index: 10; /* Ensure it's above panes if needed */
+}
+
+.divider:hover {
+  background-color: #58a6ff; /* Highlight on hover */
+}
+
+/* Remove fixed margin-top from gist-file, rely on preview-pane padding/scroll */
+.gist-preview > .gist-file:first-child {
+    margin-top: 57px; /* Restore original margin */
+}
+
+/* ... rest of the styles ... */
+
+/* New styles for the main content container */
+/*
+.main-container {
+  max-width: 1280px; /* Example max-width, adjust as needed */
+  margin: 0 auto; /* Center the container horizontally */
+  padding: 0 20px; /* Add horizontal padding for smaller screens */
+  width: 100%; /* Ensure it takes full width up to max-width */
+}
+*/ 
