@@ -9,24 +9,26 @@ body {
   background-color: #0d1117; /* Ensure body background is dark */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; /* Set base font */
   color: #c9d1d9; /* Set base text color */
+  overflow: hidden; /* Prevent body scrolling */
 }
 
 .app {
   /* Restore original styles */
-  min-height: 100vh;
+  /* min-height: 100vh; */ /* Use fixed height */
+  height: 100vh; /* Ensure app takes full viewport height */
   background-color: #0d1117;
   /* Remove width/padding */
   /* width: 100%; */
   /* padding: 20px 0; */
+  overflow: hidden; /* Prevent app container scrolling */
 }
 
 .split-view {
   display: flex;
-  min-height: 100vh; /* Restore min-height */
-  /* Remove fixed height, border, border-radius */
-  /* height: calc(100vh - 40px); */
+  /* min-height: 100vh; */ /* Use fixed height */
+  height: 100%; /* Fill the .app container height */
   align-items: stretch;
-  overflow: hidden;
+  overflow: hidden; /* Prevent split-view itself from scrolling */
   /* border: 1px solid #30363d; */
   /* border-radius: 6px; */
 }
@@ -40,8 +42,10 @@ body {
   border-right: none; /* Divider will handle the visual separation */
   overflow-x: hidden;
   /* Add vertical scroll if editor content overflows */
-  overflow-y: auto;
+  overflow-y: auto; /* Make editor pane scrollable */
   position: relative; /* Needed if editor has absolutely positioned elements */
+  display: flex; /* Use flexbox for child height */
+  flex-direction: column; /* Stack children vertically */
 }
 
 .preview-pane {
@@ -54,7 +58,8 @@ body {
   /* Remove padding from pane, it will be handled by wrapper/content */
   padding: 0; /* Revert padding back to 0 */
   border-left: none;
-  overflow: auto; /* Keep scroll on the pane */
+  overflow-y: auto; /* Make preview pane scrollable */
+  overflow-x: hidden; /* Hide horizontal overflow */
   position: relative;
   /* Add padding-top here to push content below editor header */
   /* padding-top: 57px; */ /* Keep this commented or remove if not needed */
@@ -66,7 +71,7 @@ body {
   margin: 0 auto; /* Center the wrapper horizontally */
   width: 100%; /* Use full width up to max-width */
   /* Add padding inside the wrapper */
-  padding: 0 24px 24px 24px; /* Example padding (top, right, bottom, left) */
+  padding: 16px 24px 24px 24px; /* Add top padding */
 
 }
 
@@ -74,17 +79,24 @@ body {
   background-color: #0d1117;
   color: #c9d1d9;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  display: flex; /* Use flexbox */
+  flex-direction: column; /* Stack children vertically */
+  flex-grow: 1; /* Allow editor to fill the editor-pane */
+  /* Remove fixed height if any */
 }
 
 .gist-editor-header {
-  padding: 16px;
-  border-bottom: 1px solid #30363d;
-  background-color: #161b22;
-  height: 57px;
-  display: flex;
-  align-items: center;
+  padding: 16px; /* Restore padding */
+  border-bottom: 1px solid #30363d; /* Restore border */
+  background-color: #161b22; /* Restore background */
+  height: 57px; /* Restore height */
+  display: flex; /* Restore flex for alignment */
+  align-items: center; /* Restore alignment */
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
+/* If you still have a description input, restore its styles */
+/*
 .gist-description-input {
   width: 100%;
   padding: 5px 12px;
@@ -94,30 +106,42 @@ body {
   color: #c9d1d9;
   font-size: 14px;
 }
+*/
 
 .gist-editor-toolbar {
-  padding: 8px 16px;
-  background-color: #161b22;
-  border-bottom: 1px solid #30363d;
-  height: 41px;
-  display: flex;
-  align-items: center;
+  padding: 8px 16px; /* Restore padding */
+  background-color: #161b22; /* Restore background */
+  border-bottom: 1px solid #30363d; /* Restore border */
+  height: 57px; /* Increase height to match header */
+  display: flex; /* Restore flex for alignment */
+  align-items: center; /* Restore alignment */
+  flex-shrink: 0; /* Prevent toolbar from shrinking */
 }
 
 .filename-input {
-  width: 100%;
-  padding: 5px 12px;
-  background-color: #010409;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  color: #c9d1d9;
-  font-size: 14px;
+  width: 100%; /* Restore width */
+  padding: 5px 12px; /* Restore padding */
+  background-color: #010409; /* Restore background */
+  border: 1px solid #30363d; /* Restore border */
+  border-radius: 6px; /* Restore border-radius */
+  color: #c9d1d9; /* Restore color */
+  font-size: 14px; /* Restore font-size */
+  height: 32px; /* Add explicit height */
+  line-height: normal; /* Ensure consistent line height */
+}
+
+/* Add this new rule */
+.gist-content-editor {
+  flex-grow: 1; /* Allow this container to take remaining vertical space */
+  overflow: hidden; /* Important: contain the textarea */
+  display: flex; /* Use flexbox for the textarea */
 }
 
 .content-textarea {
   width: 100%;
   /* Revert height calculation */
-  height: calc(100vh - 98px); /* Or original calc(100vh - 120px) if footer was present */
+  /* height: calc(100vh - 98px); */ /* Remove fixed vh calculation */
+  height: 100%; /* Make textarea fill the .gist-content-editor */
   background-color: #0d1117;
   border: none;
   color: #c9d1d9;
@@ -244,6 +268,8 @@ button:hover {
   border-radius: 6px;
   color: #c9d1d9;
   font-size: 14px;
+  height: 32px; /* Add explicit height */
+  line-height: normal; /* Ensure consistent line height */
   /* Animate the flex-grow property */
   transition: flex-grow 0.3s ease-in-out;
   min-width: 100px; /* Keep minimum width */
@@ -256,17 +282,67 @@ button:hover {
   flex-shrink: 0;
   flex-basis: auto; /* Size based on content + padding */
 
-  background-color: #238636;
+  background-color: #238636; /* Green */
   border-color: #238636;
   white-space: nowrap;
   padding: 5px 16px;
   font-size: 14px;
-  line-height: normal;
+  line-height: normal; /* Explicit line-height */
+  height: 32px; /* Match input height */
   border-radius: 6px;
   color: #c9d1d9;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
+  display: flex; /* Align icon and text */
+  align-items: center; /* Center vertically */
+  gap: 6px; /* Space between icon and text */
 }
+
+/* New styles for Save PDF button */
+.save-pdf-button {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+
+  background-color: #238636; /* Use green color */
+  border: 1px solid #238636; /* Use green border */
+  color: #c9d1d9; /* Default text color */
+  white-space: nowrap;
+  padding: 5px 16px;
+  font-size: 14px;
+  line-height: normal; /* Explicit line-height */
+  height: 32px; /* Match input height */
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  display: flex; /* Align icon and text */
+  align-items: center; /* Center vertically */
+  gap: 6px; /* Space between icon and text */
+}
+
+.save-pdf-button:hover {
+  background-color: #2ea043; /* Use lighter green on hover */
+  border-color: #2ea043; /* Use lighter green border on hover */
+}
+
+/* Generic style for icons inside buttons */
+.button-icon {
+  /* fill: #8b949e; */ /* Remove default gray color */
+  fill: #c9d1d9; /* Set default fill to match button text */
+  width: 16px;
+  height: 16px;
+  vertical-align: text-bottom; /* Align icon nicely */
+  /* transition: fill 0.2s ease-in-out; */ /* Remove transition if not needed or adjust */
+}
+
+/* Change icon color on button hover */
+/* Remove or comment out this rule if you want the icon color to always match the text */
+/*
+.load-button:hover .button-icon,
+.save-pdf-button:hover .button-icon {
+  fill: #c9d1d9;
+}
+*/
 
 /* Increase the input's grow factor significantly on hover */
 .gist-url-container:hover .gist-url-input {
@@ -274,7 +350,7 @@ button:hover {
 }
 
 .load-button:hover {
-  background-color: #2ea043;
+  background-color: #2ea043; /* Lighter green on hover */
 }
 
 /* Keep the input expanded when focused */
@@ -465,7 +541,8 @@ button:hover {
 
 /* Remove fixed margin-top from gist-file, rely on preview-pane padding/scroll */
 .gist-preview > .gist-file:first-child {
-    margin-top: 57px; /* Restore original margin */
+    /* margin-top: 57px; */ /* Remove this fixed margin */
+    margin-top: 0; /* Remove top margin */
 }
 
 /* ... rest of the styles ... */

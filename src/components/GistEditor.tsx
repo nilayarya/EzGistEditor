@@ -6,6 +6,22 @@ interface GistEditorProps {
   onContentChange: (description: string, filename: string, content: string) => void;
 }
 
+// Simple SVG path for a download icon (custom style)
+const DownloadIcon = () => (
+    <svg
+        aria-hidden="true"
+        height="16"
+        // Adjust viewBox if needed based on the new path's coordinates
+        viewBox="0 0 24 24" // Example: Using a 24x24 viewBox
+        version="1.1"
+        width="16"
+        className="button-icon"
+    >
+        {/* New path data for the desired download icon style */}
+        <path d="M12 16.5l-6-6h4V3h4v7.5h4l-6 6zM4 18h16v2H4v-2z"/>
+    </svg>
+);
+
 const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
   const [description, setDescription] = useState(data.description);
   const [filename, setFilename] = useState(data.files[0]?.filename || '');
@@ -15,6 +31,16 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
   useEffect(() => {
     onContentChange(description, filename, content);
   }, [description, filename, content, onContentChange]);
+
+  const handleLoadGist = () => {
+    // TODO: Implement Gist loading logic
+    console.log('Load Gist clicked', gistUrl);
+  };
+
+  const handleSavePdf = () => {
+    // TODO: Implement PDF saving logic
+    console.log('Save to PDF clicked');
+  };
 
   return (
     <div className="gist-editor">
@@ -27,7 +53,11 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange }) => {
             value={gistUrl}
             onChange={(e) => setGistUrl(e.target.value)}
           />
-          <button className="load-button">Load Gist</button>
+          <button className="load-button" onClick={handleLoadGist}>Load Gist</button>
+          <button className="save-pdf-button" onClick={handleSavePdf}>
+             <DownloadIcon />
+             Save to PDF
+          </button>
         </div>
       </div>
       
