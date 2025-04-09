@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Other common ignores (optional but recommended)
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.env
+dist/
+build/ 
