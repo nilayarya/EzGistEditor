@@ -5,6 +5,8 @@ import { GistData } from './types';
 import './styles/GistEditor.css';
 
 const MIN_PANE_WIDTH = 100;
+const DEFAULT_EDITOR_WIDTH_PERCENT = 40;
+const LS_EDITOR_WIDTH_KEY = 'splitView_editorWidthPercent'; // Key for localStorage
 
 // Helper function to extract Gist ID (Keep this)
 const extractGistId = (url: string): string | null => {
@@ -38,7 +40,23 @@ const App: React.FC = () => {
   });
 
   const [isDragging, setIsDragging] = useState(false);
-  const [editorWidth, setEditorWidth] = useState(50);
+  // Load editor width from localStorage on initial render
+  const [editorWidth, setEditorWidth] = useState<number>(() => {
+    try {
+      const savedWidth = localStorage.getItem(LS_EDITOR_WIDTH_KEY);
+      if (savedWidth !== null) {
+        const parsedWidth = parseFloat(savedWidth);
+        // Basic validation: ensure it's a number within a reasonable range (e.g., 5% to 95%)
+        if (!isNaN(parsedWidth) && parsedWidth > 5 && parsedWidth < 95) {
+          return parsedWidth;
+        }
+      }
+    } catch (error) {
+      console.error("Error reading editor width from localStorage:", error);
+    }
+    return DEFAULT_EDITOR_WIDTH_PERCENT; // Default value
+  });
+
   const splitViewRef = useRef<HTMLDivElement>(null);
   const [isPreparingPrint, setIsPreparingPrint] = useState(false);
 
@@ -67,17 +85,37 @@ const App: React.FC = () => {
     const containerRect = container.getBoundingClientRect();
     const newEditorPixelWidth = e.clientX - containerRect.left;
     const totalWidth = containerRect.width;
+
+    // Calculate min/max percentages based on fixed pixel width
     const minWidthPercent = (MIN_PANE_WIDTH / totalWidth) * 100;
+    const maxWidthPercent = 100 - minWidthPercent; // Max width for editor is 100% minus min width for preview
+
     let newEditorPercent = (newEditorPixelWidth / totalWidth) * 100;
+
+    // Clamp the value between min and max percentages
     newEditorPercent = Math.max(minWidthPercent, newEditorPercent);
-    newEditorPercent = Math.min(100 - minWidthPercent, newEditorPercent);
+    newEditorPercent = Math.min(maxWidthPercent, newEditorPercent); // Use maxWidthPercent
+
     setEditorWidth(newEditorPercent);
-  }, [isDragging]);
 
+  }, [isDragging]); // Removed editorWidth dependency
+
+  // Save width to localStorage when dragging stops
   const handleMouseUp = useCallback(() => {
-    if (isDragging) setIsDragging(false);
-  }, [isDragging]);
+    if (isDragging) {
+      setIsDragging(false);
+      // Save the current editorWidth to localStorage
+      try {
+        console.log(`Saving editor width to localStorage: ${editorWidth}%`);
+        // Use editorWidth directly from state, as it was updated during mouseMove
+        localStorage.setItem(LS_EDITOR_WIDTH_KEY, editorWidth.toString());
+      } catch (error) {
+        console.error("Error saving editor width to localStorage:", error);
+      }
+    }
+  }, [isDragging, editorWidth]); // Add editorWidth dependency here
 
+  // Effect to add/remove global listeners for dragging
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);

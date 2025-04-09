@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 // No longer need GistData type here if not receiving the full object as prop
 // import { GistData } from '../types';
 
+// LocalStorage keys
+const LS_FILENAME_KEY = 'gistEditor_filename';
+const LS_CONTENT_KEY = 'gistEditor_content';
+const LS_GIST_URL_KEY = 'gistEditor_lastUrl';
+
 interface GistEditorProps {
   // Initial values for local state
   initialFilename?: string;
@@ -39,10 +44,31 @@ const GistEditor: React.FC<GistEditorProps> = ({
   // Local state for editor fields, initialized from props
   // Description is removed as it's not directly used/updated in this simpler approach
   // const [description, setDescription] = useState('');
-  const [filename, setFilename] = useState(initialFilename);
-  const [content, setContent] = useState(initialContent);
-  // Local state specifically for the URL input field
-  const [gistUrl, setGistUrl] = useState('');
+  const [filename, setFilename] = useState<string>(() => {
+    try {
+      return localStorage.getItem(LS_FILENAME_KEY) ?? initialFilename;
+    } catch (error) {
+      console.error("Error reading filename from localStorage:", error);
+      return initialFilename;
+    }
+  });
+  const [content, setContent] = useState<string>(() => {
+    try {
+      return localStorage.getItem(LS_CONTENT_KEY) ?? initialContent;
+    } catch (error) {
+      console.error("Error reading content from localStorage:", error);
+      return initialContent;
+    }
+  });
+  // Gist URL state - Load from localStorage, default to empty string
+  const [gistUrl, setGistUrl] = useState<string>(() => {
+    try {
+      return localStorage.getItem(LS_GIST_URL_KEY) ?? ''; // Load saved URL or default to empty
+    } catch (error) {
+      console.error("Error reading Gist URL from localStorage:", error);
+      return ''; // Default to empty on error
+    }
+  });
   const [showPrintConfirmPopup, setShowPrintConfirmPopup] = useState(false);
   const saveButtonContainerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false); // Optional: Add loading state
@@ -50,8 +76,19 @@ const GistEditor: React.FC<GistEditorProps> = ({
   // Effect to call onContentChange when local fields change (user typing)
   // This updates the preview pane via App's state
   useEffect(() => {
-    // Pass empty string for description if it's not managed here
+    console.log("Editor content changed, updating preview and localStorage.");
+    // Update preview via App state
     onContentChange('', filename, content);
+
+    // Save to localStorage
+    try {
+      localStorage.setItem(LS_FILENAME_KEY, filename);
+      localStorage.setItem(LS_CONTENT_KEY, content);
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+      // Optionally notify the user if storage fails
+      // alert("Could not save editor content. LocalStorage might be disabled or full.");
+    }
   }, [filename, content, onContentChange]); // Removed description dependency
 
   // Click outside handler to close the popup
@@ -114,6 +151,18 @@ const GistEditor: React.FC<GistEditorProps> = ({
     onConfirmPrint();
   };
 
+  // Update Gist URL state AND save to localStorage
+  const handleGistUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = event.target.value;
+    setGistUrl(newUrl); // Update state
+    try {
+      // Save the entered URL to localStorage
+      localStorage.setItem(LS_GIST_URL_KEY, newUrl);
+    } catch (error) {
+      console.error("Error saving Gist URL to localStorage:", error);
+    }
+  };
+
   return (
     <div className="gist-editor">
       <div className="gist-editor-header">
@@ -123,7 +172,7 @@ const GistEditor: React.FC<GistEditorProps> = ({
             className="gist-url-input"
             placeholder="Enter Gist URL or ID..."
             value={gistUrl}
-            onChange={(e) => setGistUrl(e.target.value)}
+            onChange={handleGistUrlChange}
             onKeyDown={(e) => { if (e.key === 'Enter') handleLoadGist(); }}
             disabled={isLoading} // Disable input while loading
           />
