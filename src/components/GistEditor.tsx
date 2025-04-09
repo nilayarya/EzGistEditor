@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GistData } from '../types';
+// No longer need GistData type here if not receiving the full object as prop
+// import { GistData } from '../types';
 
 interface GistEditorProps {
-  data: GistData;
-  onContentChange: (description: string, filename: string, content: string) => void;
+  // Initial values for local state
+  initialFilename?: string;
+  initialContent?: string;
+  // Callbacks
+  onContentChange: (description: string, filename: string, content: string) => void; // Still needed to update preview
   onConfirmPrint: () => void;
+  // Function to request gist data from parent
+  onRequestGistData: (urlOrId: string) => Promise<{ filename: string; content: string } | null>;
 }
 
 // Simple SVG path for a download icon (custom style)
@@ -23,17 +29,30 @@ const DownloadIcon = () => (
     </svg>
 );
 
-const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange, onConfirmPrint }) => {
-  const [description, setDescription] = useState(data.description);
-  const [filename, setFilename] = useState(data.files[0]?.filename || '');
-  const [content, setContent] = useState(data.files[0]?.content || '');
+const GistEditor: React.FC<GistEditorProps> = ({
+  initialFilename = '', // Default initial values
+  initialContent = '',
+  onContentChange,
+  onConfirmPrint,
+  onRequestGistData
+}) => {
+  // Local state for editor fields, initialized from props
+  // Description is removed as it's not directly used/updated in this simpler approach
+  // const [description, setDescription] = useState('');
+  const [filename, setFilename] = useState(initialFilename);
+  const [content, setContent] = useState(initialContent);
+  // Local state specifically for the URL input field
   const [gistUrl, setGistUrl] = useState('');
-  const [showPrintConfirmPopup, setShowPrintConfirmPopup] = useState(false); // State for popup visibility
-  const saveButtonContainerRef = useRef<HTMLDivElement>(null); // Ref for the container
+  const [showPrintConfirmPopup, setShowPrintConfirmPopup] = useState(false);
+  const saveButtonContainerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false); // Optional: Add loading state
 
+  // Effect to call onContentChange when local fields change (user typing)
+  // This updates the preview pane via App's state
   useEffect(() => {
-    onContentChange(description, filename, content);
-  }, [description, filename, content, onContentChange]);
+    // Pass empty string for description if it's not managed here
+    onContentChange('', filename, content);
+  }, [filename, content, onContentChange]); // Removed description dependency
 
   // Click outside handler to close the popup
   useEffect(() => {
@@ -54,25 +73,45 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange, onConfir
     };
   }, [showPrintConfirmPopup]); // Re-run when popup visibility changes
 
-  const handleLoadGist = () => {
-    // TODO: Implement Gist loading logic
-    console.log('Load Gist clicked', gistUrl);
-  };
-
   // Toggle the confirmation popup
   const handleSavePdfClick = () => {
-    setShowPrintConfirmPopup(prev => !prev); // Toggle visibility
+    setShowPrintConfirmPopup(prev => !prev);
   };
 
-  // Proceed with printing after confirmation
+  // Request Gist data and update local state if successful
+  const handleLoadGist = async () => {
+    if (!gistUrl.trim()) {
+        alert("Please enter a Gist URL or ID.");
+        return;
+    }
+    setIsLoading(true); // Set loading state
+    console.log('Requesting Gist data for input:', gistUrl);
+    try {
+        const loadedData = await onRequestGistData(gistUrl); // Call the function passed from App
+        if (loadedData) {
+            console.log('Received Gist data, updating editor state:', loadedData);
+            // Update local state directly
+            setFilename(loadedData.filename);
+            setContent(loadedData.content);
+            // Optionally clear the URL input after successful load
+            // setGistUrl('');
+        } else {
+            // Error was likely already alerted in onRequestGistData
+            console.log('Failed to load Gist data (null returned).');
+        }
+    } catch (error) {
+        // Catch any unexpected errors from the promise itself
+        console.error("Error during onRequestGistData call:", error);
+        alert(`An unexpected error occurred while trying to load the Gist: ${error}`);
+    } finally {
+        setIsLoading(false); // Clear loading state
+    }
+  };
+
+  // Trigger print preparation in App.tsx
   const handleTriggerPrint = () => {
-    setShowPrintConfirmPopup(false); // Hide the popup first
-    onConfirmPrint(); // Call the function passed from App.tsx
-  };
-
-  // Optional: Remove this function if Cancel button is gone and click-outside handles closure
-  const handleCancelPrint = () => {
-     setShowPrintConfirmPopup(false);
+    setShowPrintConfirmPopup(false);
+    onConfirmPrint();
   };
 
   return (
@@ -82,11 +121,20 @@ const GistEditor: React.FC<GistEditorProps> = ({ data, onContentChange, onConfir
           <input
             type="text"
             className="gist-url-input"
-            placeholder="Enter Gist URL..."
+            placeholder="Enter Gist URL or ID..."
             value={gistUrl}
             onChange={(e) => setGistUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleLoadGist(); }}
+            disabled={isLoading} // Disable input while loading
           />
-          <button className="load-button" onClick={handleLoadGist}>Load Gist</button>
+          {/* Disable button while loading */}
+          <button
+            className="load-button"
+            onClick={handleLoadGist}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading...' : 'Load Gist'}
+          </button>
 
           {/* Wrap Save Button and Popup in a relative container */}
           <div className="save-pdf-container" ref={saveButtonContainerRef}>
