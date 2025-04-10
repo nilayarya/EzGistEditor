@@ -1,4 +1,4 @@
-# Gist Viewer/Editor
+# EzGistEditor
 
 Simple web app to view and edit GitHub Gists. Supports PDF conversion.
 
