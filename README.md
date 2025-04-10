@@ -9,14 +9,14 @@ Simple web app to view and edit GitHub Gists. Supports PDF conversion.
 1.  **Clone your fork:**
     First, fork the repository on GitHub. Then clone your fork locally:
     ```bash
-    git clone https://github.com/YOUR_USERNAME/gist2pdf.git
-    cd gist2pdf
+    git clone https://github.com/YOUR_USERNAME/EzGistEditor.git
+    cd EzGistEditor
     ```
     *(Replace `YOUR_USERNAME`)*
 
 2.  **Add Upstream Remote:**
     ```bash
-    git remote add upstream https://github.com/nilayarya/gist2pdf.git
+    git remote add upstream https://github.com/nilayarya/EzGistEditor.git
     git fetch upstream
     ```
 
@@ -64,4 +64,4 @@ Contributions are welcome! Please follow these steps:
     git push origin my-feature-branch
     ```
 
-6.  **Open Pull Request:** Go to the original repository (`nilayarya/gist2pdf`) on GitHub and open a pull request from your fork's branch (`my-feature-branch`) to the original `main` branch. Fill out the pull request template.
+6.  **Open Pull Request:** Go to the original repository (`nilayarya/EzGistEditor`) on GitHub and open a pull request from your fork's branch (`my-feature-branch`) to the original `main` branch. Fill out the pull request template.
