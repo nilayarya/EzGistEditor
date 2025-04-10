@@ -2,7 +2,7 @@
 
 Simple web app to view and edit GitHub Gists. Supports PDF conversion.
 
-![image](https://github.com/user-attachments/assets/378ecb2d-a484-4e7f-b80c-271136ccefca)
+![image](https://github.com/user-attachments/assets/4cdab36d-ce7d-4030-b964-b06de526fe93)
 
 ## Setup
 
