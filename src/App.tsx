@@ -248,11 +248,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener('afterprint', handleAfterPrint);
   }, []);
 
-  // Derive a key for GistEditor based on the current file content.
-  // This forces a re-mount if the file content is loaded asynchronously
-  // after the initial render (e.g., loading the default gist).
-  const editorKey = gistData.files[0]?.filename + '||' + gistData.files[0]?.content;
-
   return (
     <div className="app">
       <div
@@ -264,8 +259,6 @@ const App: React.FC = () => {
           style={!isPreparingPrint ? { flexBasis: `${editorWidth}%` } : {}}
         >
           <GistEditor
-            // Add the key prop here
-            key={editorKey}
             // Pass initial data (which might be updated by the useEffect)
             initialFilename={gistData.files[0]?.filename}
             initialContent={gistData.files[0]?.content}
