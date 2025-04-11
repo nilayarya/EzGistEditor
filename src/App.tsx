@@ -33,14 +33,31 @@ const extractGistId = (url: string): string | null => {
 };
 
 const App: React.FC = () => {
-  // Shared state - only updated by GistEditor's onContentChange now
-  const [gistData, setGistData] = useState<GistData>({
-    description: '', // Description might not be used if not loading into shared state
-    files: [{
-      filename: '',
-      content: ''
-    }]
+  // --- Initialize shared state SYNCHRONOUSLY from localStorage ---
+  // (Keep the useState initializer that reads localStorage first)
+  const [gistData, setGistData] = useState<GistData>(() => {
+    console.log("App: Initializing gistData state...");
+    try {
+      const savedFilename = localStorage.getItem(LS_FILENAME_KEY);
+      const savedContent = localStorage.getItem(LS_CONTENT_KEY);
+
+      if (savedFilename !== null && savedContent !== null) {
+        console.log("App: Found saved data in localStorage.");
+        return {
+          description: '',
+          files: [{ filename: savedFilename, content: savedContent }]
+        };
+      }
+    } catch (error) {
+      console.error("App: Error reading initial state from localStorage:", error);
+    }
+    console.log("App: No saved data found or error reading, using default empty state.");
+    return {
+      description: '',
+      files: [{ filename: '', content: '' }]
+    };
   });
+  // -------------------------------------------------------------
 
   const [isDragging, setIsDragging] = useState(false);
   // Load editor width from localStorage on initial render
@@ -109,72 +126,50 @@ const App: React.FC = () => {
     }
   }, []); // Empty dependency array as it doesn't depend on component state/props
 
-  // --- Effect to Load Default Gist on First Visit ---
+  // --- Effect to Load Default Gist (Adjusted - simplified check) ---
   useEffect(() => {
-    const loadInitialContent = async () => {
-      try {
-        const existingFilename = localStorage.getItem(LS_FILENAME_KEY);
-        const existingContent = localStorage.getItem(LS_CONTENT_KEY);
-
-        // Check if both filename AND content are missing/empty in localStorage
-        if (!existingFilename && !existingContent) {
-          console.log("No existing content found in localStorage. Loading default Gist...");
+    const loadDefaultIfNeeded = async () => {
+      // Check if the state (initialized from localStorage) is still empty
+      const currentFile = gistData.files[0];
+      if (!currentFile?.filename && !currentFile?.content) {
+        console.log("App: Initial state is empty. Loading default Gist...");
+        try {
           const defaultData = await requestGistData(DEFAULT_GIST_URL);
-
           if (defaultData) {
-            console.log("Default Gist loaded:", defaultData);
-            // Update App state (for preview)
-            setGistData({ description: '', files: [defaultData] });
-
-            // IMPORTANT: Write fetched data to localStorage so GistEditor picks it up
-            try {
-              localStorage.setItem(LS_FILENAME_KEY, defaultData.filename);
-              localStorage.setItem(LS_CONTENT_KEY, defaultData.content);
-              console.log("Default Gist content saved to localStorage.");
-            } catch (storageError) {
-              console.error("Error saving default Gist to localStorage:", storageError);
-              // Handle potential storage errors (e.g., quota exceeded)
-            }
-          } else {
-            console.log("Failed to load default Gist.");
-            // Optionally set some default empty state if needed, though useState already does
-             setGistData({ description: '', files: [{ filename: 'untitled.md', content: '# Welcome!' }] });
+            console.log("App: Default Gist loaded:", defaultData);
+            // Update App state AND save to localStorage using the handler
+            handleContentChange(defaultData.filename, defaultData.content);
+            console.log("App: Default Gist content set and saved via handleContentChange.");
           }
-        } else {
-           // If content exists, ensure App state reflects it initially
-           // This is important if GistEditor loads faster than App's effect
-           console.log("Existing content found in localStorage. Initializing App state.");
-           setGistData({
-               description: '', // Or load description if you store it
-               files: [{
-                   filename: existingFilename || '',
-                   content: existingContent || ''
-               }]
-           });
+        } catch (error) {
+           console.error("App: Error loading default Gist:", error);
+           // Set error state
+           handleContentChange('error.md', '# Error loading default content');
         }
-      } catch (error) {
-        console.error("Error during initial content load check:", error);
-        // Set a fallback state in case of unexpected errors
-        setGistData({ description: '', files: [{ filename: 'error.md', content: '# Error loading initial content' }] });
+      } else {
+        console.log("App: Initial state loaded from localStorage, skipping default load.");
       }
     };
 
-    loadInitialContent();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadDefaultIfNeeded();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
-  // Updates the PREVIEW based on editor typing
-  const handleContentChange = useCallback((description: string, filename: string, content: string) => {
-    setGistData(prevData => {
-      // Prevent unnecessary updates if data hasn't changed
-      if (prevData.description !== description ||
-          prevData.files[0]?.filename !== filename ||
-          prevData.files[0]?.content !== content) {
-        return { description, files: [{ filename, content }] };
-      }
-      return prevData;
-    });
-  }, []);
+  // --- Centralized handler: Updates state AND saves to localStorage ---
+  const handleContentChange = useCallback((newFilename: string, newContent: string) => {
+    console.log("App: handleContentChange called.");
+    // Update App state
+    setGistData({ description: '', files: [{ filename: newFilename, content: newContent }] });
+
+    // Save directly to localStorage
+    try {
+      console.log("App: Saving to localStorage via handleContentChange.");
+      localStorage.setItem(LS_FILENAME_KEY, newFilename);
+      localStorage.setItem(LS_CONTENT_KEY, newContent);
+    } catch (error) {
+      console.error("App: Error saving to localStorage:", error);
+    }
+  }, []); // No dependencies needed
 
   // --- Dragging Logic ---
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -236,7 +231,9 @@ const App: React.FC = () => {
   // --- Print Preparation Logic ---
   const handleConfirmPrint = () => {
     setIsPreparingPrint(true);
-    setTimeout(() => { window.print(); }, 0);
+    requestAnimationFrame(() => {
+        window.print();
+    });
   };
 
   useEffect(() => {
@@ -258,12 +255,11 @@ const App: React.FC = () => {
           className={`editor-pane ${isPreparingPrint ? 'preparing-print' : ''}`}
           style={!isPreparingPrint ? { flexBasis: `${editorWidth}%` } : {}}
         >
+          {/* Pass state and the updated handler down */}
           <GistEditor
-            // Pass initial data (which might be updated by the useEffect)
-            initialFilename={gistData.files[0]?.filename}
-            initialContent={gistData.files[0]?.content}
-            // Pass callbacks
-            onContentChange={handleContentChange} // Updates preview
+            filename={gistData.files[0]?.filename ?? ''} // Pass current filename
+            content={gistData.files[0]?.content ?? ''}   // Pass current content
+            onContentChange={handleContentChange} // Pass the combined update/save handler
             onConfirmPrint={handleConfirmPrint}
             onRequestGistData={requestGistData} // Pass the request function
           />

@@ -8,11 +8,11 @@ const LS_CONTENT_KEY = 'gistEditor_content';
 const LS_GIST_URL_KEY = 'gistEditor_lastUrl';
 
 interface GistEditorProps {
-  // Initial values for local state
-  initialFilename?: string;
-  initialContent?: string;
+  // Receive current values as props
+  filename: string;
+  content: string;
   // Callbacks
-  onContentChange: (description: string, filename: string, content: string) => void; // Still needed to update preview
+  onContentChange: (filename: string, content: string) => void; // Simplified signature
   onConfirmPrint: () => void;
   // Function to request gist data from parent
   onRequestGistData: (urlOrId: string) => Promise<{ filename: string; content: string } | null>;
@@ -35,132 +35,104 @@ const DownloadIcon = () => (
 );
 
 const GistEditor: React.FC<GistEditorProps> = ({
-  initialFilename = '', // Default initial values
-  initialContent = '',
+  // Destructure props directly
+  filename,
+  content,
   onContentChange,
   onConfirmPrint,
   onRequestGistData
 }) => {
-  // Local state for editor fields, initialized from props
-  // Description is removed as it's not directly used/updated in this simpler approach
-  // const [description, setDescription] = useState('');
-  const [filename, setFilename] = useState<string>(() => {
-    try {
-      return localStorage.getItem(LS_FILENAME_KEY) ?? initialFilename;
-    } catch (error) {
-      console.error("Error reading filename from localStorage:", error);
-      return initialFilename;
-    }
-  });
-  const [content, setContent] = useState<string>(() => {
-    try {
-      return localStorage.getItem(LS_CONTENT_KEY) ?? initialContent;
-    } catch (error) {
-      console.error("Error reading content from localStorage:", error);
-      return initialContent;
-    }
-  });
-  // Gist URL state - Load from localStorage, default to empty string
+  // --- REMOVE internal state and effects for filename and content ---
+  // const [filename, setFilename] = useState<string>(initialFilename);
+  // const [content, setContent] = useState<string>(initialContent);
+  // const isMounted = useRef(false);
+  // useEffect(() => { ... }, [initialFilename, initialContent]); // Effect 1 removed
+  // useEffect(() => { ... }, [filename, content, onContentChange]); // Effect 2 removed
+
+  // --- Keep state for URL input, print popup, loading ---
   const [gistUrl, setGistUrl] = useState<string>(() => {
     try {
-      return localStorage.getItem(LS_GIST_URL_KEY) ?? ''; // Load saved URL or default to empty
+      return localStorage.getItem(LS_GIST_URL_KEY) ?? '';
     } catch (error) {
       console.error("Error reading Gist URL from localStorage:", error);
-      return ''; // Default to empty on error
+      return '';
     }
   });
   const [showPrintConfirmPopup, setShowPrintConfirmPopup] = useState(false);
   const saveButtonContainerRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(false); // Optional: Add loading state
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Effect to call onContentChange when local fields change (user typing)
-  // This updates the preview pane via App's state
-  useEffect(() => {
-    console.log("Editor content changed, updating preview and localStorage.");
-    // Update preview via App state
-    onContentChange('', filename, content);
-
-    // Save to localStorage
-    try {
-      localStorage.setItem(LS_FILENAME_KEY, filename);
-      localStorage.setItem(LS_CONTENT_KEY, content);
-    } catch (error) {
-      console.error("Error saving to localStorage:", error);
-      // Optionally notify the user if storage fails
-      // alert("Could not save editor content. LocalStorage might be disabled or full.");
-    }
-  }, [filename, content, onContentChange]); // Removed description dependency
-
-  // Click outside handler to close the popup
+  // --- Keep click outside effect for print popup ---
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (saveButtonContainerRef.current && !saveButtonContainerRef.current.contains(event.target as Node)) {
         setShowPrintConfirmPopup(false);
       }
     };
-
     if (showPrintConfirmPopup) {
       document.addEventListener('mousedown', handleClickOutside);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
     }
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showPrintConfirmPopup]); // Re-run when popup visibility changes
+  }, [showPrintConfirmPopup]);
 
-  // Toggle the confirmation popup
+  // --- Keep handlers for print, load gist, url change ---
   const handleSavePdfClick = () => {
     setShowPrintConfirmPopup(prev => !prev);
   };
 
-  // Request Gist data and update local state if successful
+  // Modified handleLoadGist: Call parent, which should update state & save
   const handleLoadGist = async () => {
     if (!gistUrl.trim()) {
         alert("Please enter a Gist URL or ID.");
         return;
     }
-    setIsLoading(true); // Set loading state
+    setIsLoading(true);
     console.log('Requesting Gist data for input:', gistUrl);
     try {
-        const loadedData = await onRequestGistData(gistUrl); // Call the function passed from App
+        const loadedData = await onRequestGistData(gistUrl);
         if (loadedData) {
-            console.log('Received Gist data, updating editor state:', loadedData);
-            // Update local state directly
-            setFilename(loadedData.filename);
-            setContent(loadedData.content);
-            // Optionally clear the URL input after successful load
-            // setGistUrl('');
+            console.log('Received Gist data. Telling App to update state.');
+            // Tell App to update its state with the newly loaded data
+            onContentChange(loadedData.filename, loadedData.content);
         } else {
-            // Error was likely already alerted in onRequestGistData
             console.log('Failed to load Gist data (null returned).');
         }
     } catch (error) {
-        // Catch any unexpected errors from the promise itself
         console.error("Error during onRequestGistData call:", error);
         alert(`An unexpected error occurred while trying to load the Gist: ${error}`);
     } finally {
-        setIsLoading(false); // Clear loading state
+        setIsLoading(false);
     }
   };
 
-  // Trigger print preparation in App.tsx
   const handleTriggerPrint = () => {
     setShowPrintConfirmPopup(false);
     onConfirmPrint();
   };
 
-  // Update Gist URL state AND save to localStorage
   const handleGistUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = event.target.value;
-    setGistUrl(newUrl); // Update state
+    setGistUrl(newUrl);
     try {
-      // Save the entered URL to localStorage
       localStorage.setItem(LS_GIST_URL_KEY, newUrl);
     } catch (error) {
       console.error("Error saving Gist URL to localStorage:", error);
     }
+  };
+
+  // --- Update input/textarea onChange handlers ---
+  const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Call parent handler with the NEW filename and the CURRENT content prop
+    onContentChange(e.target.value, content);
+  };
+
+  const handleContentTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+     // Call parent handler with the CURRENT filename prop and the NEW content
+    onContentChange(filename, e.target.value);
   };
 
   return (
@@ -174,9 +146,8 @@ const GistEditor: React.FC<GistEditorProps> = ({
             value={gistUrl}
             onChange={handleGistUrlChange}
             onKeyDown={(e) => { if (e.key === 'Enter') handleLoadGist(); }}
-            disabled={isLoading} // Disable input while loading
+            disabled={isLoading}
           />
-          {/* Disable button while loading */}
           <button
             className="load-button"
             onClick={handleLoadGist}
@@ -185,14 +156,12 @@ const GistEditor: React.FC<GistEditorProps> = ({
             {isLoading ? 'Loading...' : 'Load Gist'}
           </button>
 
-          {/* Wrap Save Button and Popup in a relative container */}
           <div className="save-pdf-container" ref={saveButtonContainerRef}>
             <button className="save-pdf-button" onClick={handleSavePdfClick}>
                <DownloadIcon />
                Save to PDF
             </button>
 
-            {/* Confirmation Popup Bubble */}
             {showPrintConfirmPopup && (
               <div className="print-confirm-bubble">
                 <p>
@@ -204,7 +173,7 @@ const GistEditor: React.FC<GistEditorProps> = ({
                 </div>
               </div>
             )}
-          </div> {/* End save-pdf-container */}
+          </div>
 
         </div>
       </div>
@@ -214,7 +183,7 @@ const GistEditor: React.FC<GistEditorProps> = ({
           <input
             type="text"
             value={filename}
-            onChange={(e) => setFilename(e.target.value)}
+            onChange={handleFilenameChange}
             className="filename-input"
             placeholder="Filename including extension..."
           />
@@ -226,7 +195,7 @@ const GistEditor: React.FC<GistEditorProps> = ({
           className="content-textarea"
           placeholder="Enter your code here..."
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleContentTextChange}
         />
       </div>
     </div>
