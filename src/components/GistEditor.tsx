@@ -3,8 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 // import { GistData } from '../types';
 
 // LocalStorage keys
-const LS_FILENAME_KEY = 'gistEditor_filename';
-const LS_CONTENT_KEY = 'gistEditor_content';
 const LS_GIST_URL_KEY = 'gistEditor_lastUrl';
 
 interface GistEditorProps {
