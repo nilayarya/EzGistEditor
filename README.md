@@ -1,6 +1,6 @@
 # EzGistEditor
 
-A focused Markdown editor to provide a better way to edit and save GitHub Gists — perfect for writing project proposals, outlines, and documentation snippets 
+A focused Markdown editor that provides a better way to edit and save GitHub Gists — perfect for writing project proposals, outlines, and documentation snippets 
 
 https://ezgisteditor.netlify.app
 
