@@ -7,6 +7,9 @@ import './styles/GistEditor.css';
 const MIN_PANE_WIDTH = 100;
 const DEFAULT_EDITOR_WIDTH_PERCENT = 40;
 const LS_EDITOR_WIDTH_KEY = 'splitView_editorWidthPercent'; // Key for localStorage
+const LS_FILENAME_KEY = 'gistEditor_filename'; // Reuse key definition
+const LS_CONTENT_KEY = 'gistEditor_content';   // Reuse key definition
+const DEFAULT_GIST_URL = 'https://gist.github.com/nilayarya/9b0c8a66fbd6e7b8cd5223f3860ff248'; // Default Gist
 
 // Helper function to extract Gist ID (Keep this)
 const extractGistId = (url: string): string | null => {
@@ -59,6 +62,106 @@ const App: React.FC = () => {
 
   const splitViewRef = useRef<HTMLDivElement>(null);
   const [isPreparingPrint, setIsPreparingPrint] = useState(false);
+
+  // --- Request Gist Data Logic (Moved up for use in useEffect) ---
+  const requestGistData = useCallback(async (urlOrId: string): Promise<{ filename: string; content: string } | null> => {
+    const gistId = extractGistId(urlOrId);
+
+    if (!gistId) {
+      alert('Invalid Gist URL or ID provided.');
+      return null;
+    }
+
+    console.log(`Requesting Gist data for ID: ${gistId}`);
+    try {
+      const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+
+      if (!response.ok) {
+         if (response.status === 404) throw new Error('Gist not found (404).');
+         let errorMsg = `GitHub API error: ${response.status}`;
+         try { const errData = await response.json(); errorMsg += ` - ${errData.message}`; } catch { /* ignore */ }
+         throw new Error(errorMsg);
+      }
+      const data = await response.json();
+
+      const files = data.files;
+      if (!files || Object.keys(files).length === 0) throw new Error('Gist contains no files.');
+
+      const firstFileName = Object.keys(files)[0];
+      const firstFile = files[firstFileName];
+      if (!firstFile) throw new Error('Could not access file data.');
+
+      const filename = firstFile.filename || 'untitled';
+      const content = firstFile.content || '';
+
+      console.log('Gist data retrieved successfully.');
+      return { filename, content };
+
+    } catch (error) {
+      console.error('Failed to request Gist data:', error);
+      alert(`Failed to load Gist: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return null;
+    }
+  }, []); // Empty dependency array as it doesn't depend on component state/props
+
+  // --- Effect to Load Default Gist on First Visit ---
+  useEffect(() => {
+    const loadInitialContent = async () => {
+      try {
+        const existingFilename = localStorage.getItem(LS_FILENAME_KEY);
+        const existingContent = localStorage.getItem(LS_CONTENT_KEY);
+
+        // Check if both filename AND content are missing/empty in localStorage
+        if (!existingFilename && !existingContent) {
+          console.log("No existing content found in localStorage. Loading default Gist...");
+          const defaultData = await requestGistData(DEFAULT_GIST_URL);
+
+          if (defaultData) {
+            console.log("Default Gist loaded:", defaultData);
+            // Update App state (for preview)
+            setGistData({ description: '', files: [defaultData] });
+
+            // IMPORTANT: Write fetched data to localStorage so GistEditor picks it up
+            try {
+              localStorage.setItem(LS_FILENAME_KEY, defaultData.filename);
+              localStorage.setItem(LS_CONTENT_KEY, defaultData.content);
+              console.log("Default Gist content saved to localStorage.");
+            } catch (storageError) {
+              console.error("Error saving default Gist to localStorage:", storageError);
+              // Handle potential storage errors (e.g., quota exceeded)
+            }
+          } else {
+            console.log("Failed to load default Gist.");
+            // Optionally set some default empty state if needed, though useState already does
+             setGistData({ description: '', files: [{ filename: 'untitled.md', content: '# Welcome!' }] });
+          }
+        } else {
+           // If content exists, ensure App state reflects it initially
+           // This is important if GistEditor loads faster than App's effect
+           console.log("Existing content found in localStorage. Initializing App state.");
+           setGistData({
+               description: '', // Or load description if you store it
+               files: [{
+                   filename: existingFilename || '',
+                   content: existingContent || ''
+               }]
+           });
+        }
+      } catch (error) {
+        console.error("Error during initial content load check:", error);
+        // Set a fallback state in case of unexpected errors
+        setGistData({ description: '', files: [{ filename: 'error.md', content: '# Error loading initial content' }] });
+      }
+    };
+
+    loadInitialContent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   // Updates the PREVIEW based on editor typing
   const handleContentChange = useCallback((description: string, filename: string, content: string) => {
@@ -145,52 +248,10 @@ const App: React.FC = () => {
     return () => window.removeEventListener('afterprint', handleAfterPrint);
   }, []);
 
-  // --- Request Gist Data Logic ---
-  // Fetches data and RETURNS it, does NOT set state here
-  const requestGistData = async (urlOrId: string): Promise<{ filename: string; content: string } | null> => {
-    const gistId = extractGistId(urlOrId);
-
-    if (!gistId) {
-      alert('Invalid Gist URL or ID provided.');
-      return null; // Indicate failure
-    }
-
-    console.log(`Requesting Gist data for ID: ${gistId}`);
-    try {
-      const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-        headers: {
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
-      });
-
-      if (!response.ok) {
-         if (response.status === 404) throw new Error('Gist not found (404).');
-         let errorMsg = `GitHub API error: ${response.status}`;
-         try { const errData = await response.json(); errorMsg += ` - ${errData.message}`; } catch { /* ignore */ }
-         throw new Error(errorMsg);
-      }
-      const data = await response.json();
-
-      const files = data.files;
-      if (!files || Object.keys(files).length === 0) throw new Error('Gist contains no files.');
-
-      const firstFileName = Object.keys(files)[0];
-      const firstFile = files[firstFileName];
-      if (!firstFile) throw new Error('Could not access file data.');
-
-      const filename = firstFile.filename || 'untitled';
-      const content = firstFile.content || '';
-
-      console.log('Gist data retrieved successfully.');
-      return { filename, content }; // Return the data
-
-    } catch (error) {
-      console.error('Failed to request Gist data:', error);
-      alert(`Failed to load Gist: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return null; // Indicate failure
-    }
-  };
+  // Derive a key for GistEditor based on the current file content.
+  // This forces a re-mount if the file content is loaded asynchronously
+  // after the initial render (e.g., loading the default gist).
+  const editorKey = gistData.files[0]?.filename + '||' + gistData.files[0]?.content;
 
   return (
     <div className="app">
@@ -203,7 +264,9 @@ const App: React.FC = () => {
           style={!isPreparingPrint ? { flexBasis: `${editorWidth}%` } : {}}
         >
           <GistEditor
-            // Pass initial data (likely empty or default)
+            // Add the key prop here
+            key={editorKey}
+            // Pass initial data (which might be updated by the useEffect)
             initialFilename={gistData.files[0]?.filename}
             initialContent={gistData.files[0]?.content}
             // Pass callbacks
